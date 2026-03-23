@@ -10,8 +10,8 @@ description: "Get the Deltarune Complete Transcript Dataset loaded and queryable
 Clone the repository from its source, or download and extract the archive.
 
 ```bash
-git clone https://github.com/your-username/deltarune-transcript-dataset.git
-cd deltarune-transcript-dataset
+git clone https://github.com/ntvm/Deltarune-Complete-Transcript-Cleaned
+cd Deltarune-Complete-Transcript-Cleaned
 ```
 
 The repository contains two main data directories:
@@ -70,10 +70,10 @@ print(df.head())
 Example output:
 
 ```
-               context   speaker                    text
-0  Scene: Device Contact  Narrator           ARE YOU THERE?
-1    Scene: Cyber World    Susie             Hell yeah!!!
-2    Scene: Cyber World     Kris  ...
+                 context   speaker          text
+0  Scene: Device Contact  Narrator  ARE YOU THERE?
+1  Scene: Device Contact  Narrator  ARE WE CONNECTED?
+2  Scene: Device Contact  Narrator  ...
 ```
 
 </Step>
@@ -141,13 +141,25 @@ print(ch2_player_choices['text'].tolist())
 
 The `data/chatml/deltarune_story_chatml.jsonl` file contains the same transcript data pre-formatted as ChatML message sequences, suitable for supervised fine-tuning of instruction-following models.
 
-Each record in this file uses the standard ChatML structure:
+Each record in this file uses the standard ChatML structure with three roles:
 
 ```json chatml example
-{"messages": [
-  {"role": "system", "content": "Scene: Cyber World"},
-  {"role": "assistant", "content": "Susie: Hell yeah!!!"}
-]}
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the Deltarune Script Archive. You provide exact, chronological scene transcripts including dialogues, actions, and pauses."
+    },
+    {
+      "role": "user",
+      "content": "Provide the transcript for Scene: Obj Krisroom.\nContext: This scene occurs after 'Device Contact' and before 'Obj Carcutscene'."
+    },
+    {
+      "role": "assistant",
+      "content": "Toriel: \"Kris...!\"\nToriel: \"Wake up!\"\nToriel: \"KRIS...!\"\nToriel: \"Kris, if you do not wake up, we will be late for school!\"\nToriel: \"I will wait outside for you, alright?\""
+    }
+  ]
+}
 ```
 
 Load it the same way as any other JSONL file:

@@ -112,14 +112,7 @@ print(counts.head(10))
 
 ## Regenerating parquet files
 
-The `parquet.py` script in the repository root regenerates all Parquet files from the source JSONL files. Run it from the `data/` directory.
-
-```bash
-cd data
-python ../parquet.py
-```
-
-The script reads every `chap*_dataset.jsonl` file, writes a corresponding `.parquet` file, and then writes a combined `full_chapters_dataset.parquet`.
+The `parquet.py` script in the repository root regenerates Parquet files from the source JSONL files.
 
 ```python parquet.py
 import pandas as pd
@@ -159,5 +152,5 @@ if __name__ == "__main__":
 ```
 
 <Warning>
-  The script uses `glob.glob('chap*_dataset.jsonl')` and must be run from the `data/` directory. Running it from the repository root will produce no output files.
+  The script uses `glob.glob('chap*_dataset.jsonl')` to find input files and writes output Parquet files to the current working directory. Run it from the directory containing the JSONL files (`data/`). Output Parquet files will appear alongside the JSONL files, not in the `parquet/` directory.
 </Warning>

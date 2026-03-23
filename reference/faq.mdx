@@ -35,10 +35,10 @@ description: "Frequently asked questions about the Deltarune Complete Transcript
   <Accordion title="What formats are available?">
     The dataset is available in the following formats:
 
-    - **JSONL** — Structured JSON Lines format (one record per line), available as `chap{N}_cleaned.jsonl` files
-    - **Plain text** — Available as `chap{N}_cleaned.txt` files
-    - **Parquet** — Structured columnar format available on HuggingFace
-    - **ChatML** — Conversational format for use with chat-style model training
+    - **JSONL** — Structured JSON Lines format (one record per line), at `data/chap1_dataset.jsonl` through `data/chap4_dataset.jsonl`
+    - **Plain text** — Human-readable cleaned text at `data/chap1_cleaned.txt` through `data/chap4_cleaned.txt`
+    - **Parquet** — Columnar format for efficient querying at `parquet/chap1_dataset.parquet` through `parquet/chap4_dataset.parquet`, plus `parquet/full_chapters_dataset.parquet` combining all chapters
+    - **ChatML** — Instruction fine-tuning format at `data/chatml/deltarune_story_chatml.jsonl`
   </Accordion>
 
   <Accordion title="How do I report issues or contribute?">
