@@ -1,80 +1,162 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Get the Deltarune Complete Transcript Dataset loaded and queryable in Python in under five minutes."
 ---
 
-## Get started in three steps
+<Steps>
 
-Get your documentation site running locally and make your first customization.
+<Step title="Clone or download the repository">
 
-### Step 1: Set up your local environment
+Clone the repository from its source, or download and extract the archive.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+```bash
+git clone https://github.com/your-username/deltarune-transcript-dataset.git
+cd deltarune-transcript-dataset
+```
 
-### Step 2: Deploy your changes
+The repository contains two main data directories:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+```
+data/
+  chap1_dataset.jsonl
+  chap2_dataset.jsonl
+  chap3_dataset.jsonl
+  chap4_dataset.jsonl
+  chatml/
+    deltarune_story_chatml.jsonl
+parquet/
+  chap1_dataset.parquet
+  chap2_dataset.parquet
+  chap3_dataset.parquet
+  chap4_dataset.parquet
+  full_chapters_dataset.parquet
+```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+</Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+<Step title="Install dependencies">
 
-### Step 3: Go live
+The dataset examples use `pandas` and `pyarrow`. Install them with your package manager of choice.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+<CodeGroup>
 
-## Next steps
+```bash pip
+pip install pandas pyarrow
+```
 
-Now that you have your docs running, explore these key features:
+```bash conda
+conda install pandas pyarrow
+```
 
-<CardGroup cols={2}>
+</CodeGroup>
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
+</Step>
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
+<Step title="Load a chapter from JSONL">
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
+Each chapter is available as a JSONL file with one record per line. Use `pandas.read_json` with `lines=True` to load it into a DataFrame.
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
+```python load_jsonl.py
+import pandas as pd
 
-</CardGroup>
+# Load a single chapter
+df = pd.read_json('data/chap1_dataset.jsonl', lines=True)
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+print(df.shape)        # (1068, 3)
+print(df.columns.tolist())  # ['context', 'speaker', 'text']
+print(df.head())
+```
+
+Example output:
+
+```
+               context   speaker                    text
+0  Scene: Device Contact  Narrator           ARE YOU THERE?
+1    Scene: Cyber World    Susie             Hell yeah!!!
+2    Scene: Cyber World     Kris  ...
+```
+
+</Step>
+
+<Step title="Load Parquet with pandas">
+
+Parquet files load faster than JSONL for large queries. Use the per-chapter files or the combined file.
+
+```python load_parquet.py
+import pandas as pd
+
+# Load a single chapter as Parquet
+df_ch1 = pd.read_parquet('parquet/chap1_dataset.parquet')
+
+# Load all chapters at once
+df_all = pd.read_parquet('parquet/full_chapters_dataset.parquet')
+
+print(f"Total records: {len(df_all)}")
+print(df_all['speaker'].value_counts().head(10))
+```
+
+<Tip>
+  Use `full_chapters_dataset.parquet` whenever you need to query across chapters — for example, to find every line spoken by a character regardless of chapter, or to analyze narrator patterns across the full game.
+</Tip>
+
+</Step>
+
+<Step title="Filter by chapter, speaker, and scene">
+
+All three fields — `context`, `speaker`, and `text` — support standard pandas filtering.
+
+```python filter_examples.py
+import pandas as pd
+
+df = pd.read_parquet('parquet/full_chapters_dataset.parquet')
+
+# Filter by speaker
+susie_lines = df[df['speaker'] == 'Susie']
+print(f"Susie has {len(susie_lines)} lines")
+
+# Filter narrator lines only
+narrator = df[df['speaker'] == 'Narrator']
+
+# Filter by scene (context field)
+cyber_world = df[df['context'] == 'Scene: Cyber World']
+
+# Combine filters: Ralsei lines in a specific scene
+ralsei_castle = df[
+    (df['speaker'] == 'Ralsei') &
+    (df['context'].str.contains('Castle', case=False))
+]
+
+# Load a specific chapter by file
+ch2 = pd.read_parquet('parquet/chap2_dataset.parquet')
+ch2_player_choices = ch2[ch2['speaker'] == 'Player']
+
+print(ch2_player_choices['text'].tolist())
+```
+
+</Step>
+
+</Steps>
+
+## ChatML format
+
+The `data/chatml/deltarune_story_chatml.jsonl` file contains the same transcript data pre-formatted as ChatML message sequences, suitable for supervised fine-tuning of instruction-following models.
+
+Each record in this file uses the standard ChatML structure:
+
+```json chatml example
+{"messages": [
+  {"role": "system", "content": "Scene: Cyber World"},
+  {"role": "assistant", "content": "Susie: Hell yeah!!!"}
+]}
+```
+
+Load it the same way as any other JSONL file:
+
+```python load_chatml.py
+import pandas as pd
+
+chatml = pd.read_json('data/chatml/deltarune_story_chatml.jsonl', lines=True)
+print(chatml.head())
+```
+
+See [LLM fine-tuning](/usage/llm-finetuning) for guidance on using this file with training frameworks.

@@ -1,0 +1,156 @@
+---
+title: "ChatML format"
+description: "How to load and use the Deltarune dataset in ChatML format for instruction fine-tuning of language models."
+---
+
+The ChatML file packages the entire dataset as multi-turn conversations structured for instruction fine-tuning. Each record corresponds to one scene and contains three messages: a system prompt defining the assistant's role, a user request for a specific scene transcript, and an assistant response with the full scene dialogue.
+
+This is the recommended format for fine-tuning language models on this dataset.
+
+The file is located at `data/chatml/deltarune_story_chatml.jsonl`.
+
+## Message structure
+
+Each record is a JSON object with a single `messages` array containing three entries.
+
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the Deltarune Script Archive. You provide exact, chronological scene transcripts including dialogues, actions, and pauses."
+    },
+    {
+      "role": "user",
+      "content": "Provide the transcript for Scene: Obj Krisroom.\nContext: This scene occurs after 'Device Contact' and before 'Obj Carcutscene'."
+    },
+    {
+      "role": "assistant",
+      "content": "Toriel: \"Kris...!\"\nToriel: \"Wake up!\"\nToriel: \"KRIS...!\"\nToriel: \"Kris, if you do not wake up, we will be late for school!\"\nToriel: \"I will wait outside for you, alright?\""
+    }
+  ]
+}
+```
+
+## Role descriptions
+
+### system
+
+The system message establishes the assistant's identity as the **Deltarune Script Archive**. It instructs the model to provide exact, chronological scene transcripts including dialogue, actions, and pauses. This prompt is identical across all records.
+
+### user
+
+The user message requests a specific scene transcript. It follows this template:
+
+```
+Provide the transcript for <scene name>.
+Context: This scene occurs after '<previous scene>' and before '<next scene>'.
+```
+
+The context line gives the model positional information about where the scene falls in the story's chronology.
+
+### assistant
+
+The assistant message contains the full scene transcript. Formatting rules:
+
+- Each line of dialogue is formatted as `Speaker: "line text"`
+- One line per message, separated by newlines
+- Player choices are written as `> [Player Choice: X]`
+- Narration and actions follow the same `Speaker: "text"` pattern with `Narrator` as the speaker
+
+## Loading the data
+
+```python
+import json
+
+records = []
+with open("data/chatml/deltarune_story_chatml.jsonl", "r", encoding="utf-8") as f:
+    for line in f:
+        record = json.loads(line)
+        records.append(record)
+
+print(f"Total records: {len(records)}")
+
+# Inspect the first record
+first = records[0]
+for message in first["messages"]:
+    print(f"--- {message['role']} ---")
+    print(message["content"])
+    print()
+```
+
+## Inspect system and user prompts
+
+```python
+import json
+
+with open("data/chatml/deltarune_story_chatml.jsonl", "r", encoding="utf-8") as f:
+    records = [json.loads(line) for line in f]
+
+# Extract all user prompts (scene requests)
+for record in records[:5]:
+    messages = {m["role"]: m["content"] for m in record["messages"]}
+    print(messages["user"])
+    print()
+```
+
+## Convert to HuggingFace datasets format
+
+```python
+from datasets import Dataset
+import json
+
+# Load raw records
+with open("data/chatml/deltarune_story_chatml.jsonl", "r", encoding="utf-8") as f:
+    records = [json.loads(line) for line in f]
+
+# Flatten into a list of dicts with 'messages' key
+# HuggingFace datasets expects a dict of lists
+data = {"messages": [record["messages"] for record in records]}
+
+ds = Dataset.from_dict(data)
+print(ds)
+print(ds[0])
+
+# Optionally push to HuggingFace Hub
+# ds.push_to_hub("your-username/deltarune-chatml")
+```
+
+<Note>
+  The `messages` field structure is compatible with the format expected by libraries such as `trl` (SFTTrainer), `axolotl`, and `LLaMA-Factory` when using their ChatML or conversation templates.
+</Note>
+
+## Use for fine-tuning
+
+<Tip>
+  When fine-tuning, apply the model's chat template to format the `messages` array before tokenization. Most fine-tuning frameworks handle this automatically when you pass a dataset with a `messages` column.
+</Tip>
+
+Example using `trl` and `transformers`:
+
+```python
+from datasets import Dataset
+from trl import SFTTrainer, SFTConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM
+import json
+
+# Load dataset
+with open("data/chatml/deltarune_story_chatml.jsonl", "r", encoding="utf-8") as f:
+    records = [json.loads(line) for line in f]
+
+ds = Dataset.from_dict({"messages": [r["messages"] for r in records]})
+
+# Load model and tokenizer
+model_id = "your-base-model-id"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(model_id)
+
+# Train
+trainer = SFTTrainer(
+    model=model,
+    args=SFTConfig(output_dir="output"),
+    train_dataset=ds,
+    processing_class=tokenizer,
+)
+trainer.train()
+```

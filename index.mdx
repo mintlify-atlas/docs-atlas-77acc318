@@ -1,97 +1,74 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Deltarune Complete Transcript Dataset"
+description: "A structured, fan-made transcript dataset covering Deltarune Chapters 1–4, formatted for LLM fine-tuning and narrative context retrieval."
 ---
 
-## Setting up
+# Deltarune Complete Transcript Dataset
 
-Get your documentation site up and running in minutes.
+A fan-made transcript dataset covering the complete story of Deltarune Chapters 1 through 4. Processed from video playthroughs with AI-assisted segmentation, structured for use in LLM fine-tuning, retrieval-augmented generation, and narrative research.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+<Info>
+  As of early 2026, major LLMs fail to recall basic plot details of Deltarune Chapters 3 and 4 despite their public release. This dataset exists to close that gap.
+</Info>
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Load the dataset in Python in under 5 minutes
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Data Schema" icon="table" href="/data-model/schema">
+    Understand the context, speaker, and text fields
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Dataset Files" icon="database" href="/dataset/overview">
+    JSONL, Parquet, and ChatML formats available
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="LLM Fine-tuning" icon="brain" href="/usage/llm-finetuning">
+    Use the ChatML format for instruction tuning
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What's included
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="Chapter 1 — Full" icon="1">
+    Complete Chapter 1 transcript. Stable release. Pre-vid2text version.
+  </Card>
+  <Card title="Chapter 2 — Full (Normal Route)" icon="2">
+    Complete Chapter 2 Normal Route transcript. Stable release.
+  </Card>
+  <Card title="Chapter 3 — Full + Sword Route" icon="3">
+    Complete Chapter 3 transcript including Sword Route content. Stable release.
+  </Card>
+  <Card title="Chapter 4 — Full (Normal Route)" icon="4">
+    Complete Chapter 4 Normal Route transcript. Beta release.
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Dataset formats
 
-## Need inspiration?
+The transcript data is available in three formats depending on your use case:
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+| Format | File | Best for |
+|--------|------|----------|
+| JSONL | `data/chap*_dataset.jsonl` | General use, streaming, pandas |
+| Parquet | `parquet/chap*_dataset.parquet` | Columnar queries, large-scale processing |
+| ChatML | `data/chatml/deltarune_story_chatml.jsonl` | LLM instruction fine-tuning |
+
+## Record structure
+
+Every record in the JSONL dataset has three fields:
+
+```json
+{"context": "Scene: Cyber World", "speaker": "Susie", "text": "Hell yeah!!!"}
+```
+
+- **`context`** — The scene or location where the line occurs
+- **`speaker`** — Who is speaking (character name, `Narrator`, or `Player`)
+- **`text`** — The actual line of dialogue or narration
+
+## License
+
+This dataset is released under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) — public domain. No attribution required. No conditions. Use it however you want.
+
+<Note>
+  Source material (Deltarune) is © Toby Fox. This dataset covers the transcription and structural processing work only. Standard fan-project precedent applies.
+</Note>

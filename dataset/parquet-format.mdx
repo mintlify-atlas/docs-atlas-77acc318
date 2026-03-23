@@ -1,0 +1,163 @@
+---
+title: "Parquet format"
+description: "How to load and query the Deltarune dataset using Apache Parquet files with pandas and pyarrow."
+---
+
+Apache Parquet is a columnar binary storage format optimized for analytical workloads. Compared to JSONL, Parquet files load faster, use less disk space due to built-in compression, and allow engines to skip reading columns or row groups that are not needed for a query.
+
+Parquet files for this dataset are in the `parquet/` directory.
+
+## Available files
+
+| File | Contents |
+|------|----------|
+| `parquet/chap1_dataset.parquet` | Chapter 1 only |
+| `parquet/chap2_dataset.parquet` | Chapter 2 only |
+| `parquet/chap3_dataset.parquet` | Chapter 3 only |
+| `parquet/chap4_dataset.parquet` | Chapter 4 only |
+| `parquet/full_chapters_dataset.parquet` | All chapters combined |
+
+<Tip>
+  Use `full_chapters_dataset.parquet` for any cross-chapter analysis. It is generated from all four per-chapter JSONL files and is the most convenient starting point for most queries.
+</Tip>
+
+## Schema
+
+All Parquet files share the same three-column schema:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `context` | string | Scene identifier, prefixed with `Scene:` |
+| `speaker` | string | Character name or `Narrator` |
+| `text` | string | Exact line of dialogue or narration |
+
+## Loading with pandas
+
+```python
+import pandas as pd
+
+# Load a single chapter
+df = pd.read_parquet("parquet/chap2_dataset.parquet")
+print(df.head())
+print(f"Records: {len(df)}")
+
+# Load the combined file
+df_all = pd.read_parquet("parquet/full_chapters_dataset.parquet")
+print(f"Total records: {len(df_all)}")
+```
+
+## Loading with pyarrow
+
+```python
+import pyarrow.parquet as pq
+
+# Read as an Arrow table (efficient for large files)
+table = pq.read_table("parquet/full_chapters_dataset.parquet")
+print(table.schema)
+print(table.num_rows)
+
+# Convert to pandas for filtering
+df = table.to_pandas()
+```
+
+## Query examples
+
+### Filter by speaker
+
+```python
+import pandas as pd
+
+df = pd.read_parquet("parquet/full_chapters_dataset.parquet")
+
+# All Ralsei lines across all chapters
+ralsei = df[df["speaker"] == "Ralsei"]
+print(f"Ralsei has {len(ralsei)} lines")
+print(ralsei["text"].head(5).tolist())
+```
+
+### Filter by scene
+
+```python
+import pandas as pd
+
+df = pd.read_parquet("parquet/full_chapters_dataset.parquet")
+
+# All lines in a specific scene
+scene = df[df["context"] == "Scene: Obj Krisroom"]
+for _, row in scene.iterrows():
+    print(f"{row['speaker']}: {row['text']}")
+```
+
+### Count records per chapter (using per-chapter files)
+
+```python
+import pandas as pd
+import glob
+
+for path in sorted(glob.glob("parquet/chap*_dataset.parquet")):
+    df = pd.read_parquet(path)
+    chapter = path.split("/")[-1].replace("_dataset.parquet", "")
+    print(f"{chapter}: {len(df)} records")
+```
+
+### Top speakers across all chapters
+
+```python
+import pandas as pd
+
+df = pd.read_parquet("parquet/full_chapters_dataset.parquet")
+counts = df["speaker"].value_counts()
+print(counts.head(10))
+```
+
+## Regenerating parquet files
+
+The `parquet.py` script in the repository root regenerates all Parquet files from the source JSONL files. Run it from the `data/` directory.
+
+```bash
+cd data
+python ../parquet.py
+```
+
+The script reads every `chap*_dataset.jsonl` file, writes a corresponding `.parquet` file, and then writes a combined `full_chapters_dataset.parquet`.
+
+```python parquet.py
+import pandas as pd
+import glob
+import os
+
+def make_parquets():
+    jsonl_files = glob.glob('chap*_dataset.jsonl')
+
+    if not jsonl_files:
+        print("[-] Files chap*_dataset.jsonl Not found in current dir")
+        return
+
+    all_dataframes = []
+    required_columns = ['context', 'speaker', 'text']
+
+    for file_name in jsonl_files:
+        try:
+            df = pd.read_json(file_name, lines=True)
+            df = df[required_columns]
+            output_name = file_name.replace('.jsonl', '.parquet')
+            df.to_parquet(output_name, index=False, engine='pyarrow')
+            print(f"[+] Created: {output_name} ({len(df)} strings)")
+            all_dataframes.append(df)
+        except KeyError:
+            print(f"[!] Error in {file_name}: missing required columns {required_columns}")
+        except Exception as e:
+            print(f"[!] Unable to process {file_name}: {e}")
+
+    if all_dataframes:
+        full_df = pd.concat(all_dataframes, ignore_index=True)
+        full_df.to_parquet('full_chapters_dataset.parquet', index=False, engine='pyarrow')
+        print(f"\n[OK] Main file ready: full_chapters_dataset.parquet ({len(full_df)} rows)")
+
+if __name__ == "__main__":
+    make_parquets()
+```
+
+<Warning>
+  The script uses `glob.glob('chap*_dataset.jsonl')` and must be run from the `data/` directory. Running it from the repository root will produce no output files.
+</Warning>

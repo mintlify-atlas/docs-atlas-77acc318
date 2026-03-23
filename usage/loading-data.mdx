@@ -1,0 +1,117 @@
+---
+title: "Loading data"
+description: "How to load the Deltarune Complete Transcript Dataset in Python using pandas, the json module, or the HuggingFace datasets library."
+---
+
+The dataset is distributed as JSONL and Parquet files, organized by chapter, with a combined Parquet file for cross-chapter access. Each record contains three fields:
+
+- `context` — Scene identifier, e.g. `"Scene: Obj Krisroom"`
+- `speaker` — Speaker name or tag (`Narrator`, `Player`, or a character name)
+- `text` — The dialogue or narration text
+
+## Install dependencies
+
+```bash
+pip install pandas pyarrow datasets
+```
+
+## Clone the repository
+
+```bash
+git clone https://github.com/ntvm/Deltarune-Complete-Transcript-Cleaned
+cd Deltarune-Complete-Transcript-Cleaned
+```
+
+## Load data
+
+<Steps>
+  <Step title="Load a single chapter (JSONL)">
+    Each chapter has its own JSONL file under `data/`.
+
+    ```python
+    import pandas as pd
+
+    df = pd.read_json("data/chap1_dataset.jsonl", lines=True)
+    print(df.columns.tolist())  # ['context', 'speaker', 'text']
+    print(df.head())
+    ```
+
+    Available files: `chap1_dataset.jsonl` through `chap4_dataset.jsonl`.
+  </Step>
+
+  <Step title="Load a single chapter (Parquet)">
+    Parquet files are stored under `parquet/` and load faster than JSONL for large chapters.
+
+    ```python
+    import pandas as pd
+
+    df = pd.read_parquet("parquet/chap1_dataset.parquet")
+    print(df.dtypes)
+    ```
+  </Step>
+
+  <Step title="Load all chapters combined">
+    Use the combined Parquet file to query across all chapters without manually concatenating files.
+
+    ```python
+    import pandas as pd
+
+    df = pd.read_parquet("parquet/full_chapters_dataset.parquet")
+    print(f"Total records: {len(df)}")
+    ```
+
+    <Tip>
+      Prefer `full_chapters_dataset.parquet` when you need cross-chapter analysis. It avoids the overhead of loading and concatenating four separate files.
+    </Tip>
+  </Step>
+
+  <Step title="Load the ChatML file">
+    The ChatML file is used for fine-tuning and contains multi-turn conversations in the OpenAI messages format.
+
+    <CodeGroup>
+
+    ```python json stdlib
+    import json
+
+    records = []
+    with open("data/chatml/deltarune_story_chatml.jsonl") as f:
+        for line in f:
+            records.append(json.loads(line))
+
+    # Each record has a 'messages' key with a list of role/content dicts
+    print(records[0]["messages"][0]["role"])    # 'system'
+    print(records[0]["messages"][1]["role"])    # 'user'
+    print(records[0]["messages"][2]["role"])    # 'assistant'
+    ```
+
+    ```python pandas
+    import pandas as pd
+
+    df = pd.read_json("data/chatml/deltarune_story_chatml.jsonl", lines=True)
+    # 'messages' column contains lists of dicts
+    print(df["messages"].iloc[0])
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Load from HuggingFace Hub">
+    If the dataset has been published to the HuggingFace Hub, load it directly with the `datasets` library — no local clone required.
+
+    ```python
+    from datasets import load_dataset
+
+    # Load a single chapter split
+    ds = load_dataset("ntvm/Deltarune-Complete-Transcript-Cleaned", split="chap1")
+    print(ds.column_names)  # ['context', 'speaker', 'text']
+
+    # Convert to a pandas DataFrame
+    df = ds.to_pandas()
+    print(df.head())
+    ```
+
+    <Note>
+      The exact dataset identifier and available splits depend on how the dataset was published to the Hub. Check the dataset card on HuggingFace for the authoritative identifier and split names.
+    </Note>
+  </Step>
+</Steps>

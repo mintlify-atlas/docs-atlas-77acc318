@@ -1,0 +1,103 @@
+---
+title: "Schema"
+description: "Complete field reference for the Deltarune Complete Transcript Dataset."
+---
+
+Every record in the dataset — regardless of format — contains three fields: `context`, `speaker`, and `text`. This schema is consistent across JSONL, Parquet, and ChatML formats.
+
+## JSONL / Parquet fields
+
+<ResponseField name="context" type="string" required>
+  The scene identifier where this line occurs. Always formatted as `"Scene: <scene_name>"`. Scene names may be descriptive (e.g., `"Scene: Cyber World"`) or internal object identifiers (e.g., `"Scene: Obj Krisroom"`).
+</ResponseField>
+
+<ResponseField name="speaker" type="string" required>
+  The entity delivering this line. One of: a character name (e.g., `"Susie"`, `"Toriel"`), `"Narrator"` for game narration and descriptions, or `"Player"` for player choice options.
+</ResponseField>
+
+<ResponseField name="text" type="string" required>
+  The actual content of the line — dialogue, narration, or a player choice label.
+</ResponseField>
+
+## Example records
+
+```json
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "ARE YOU THERE?"}
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "ARE WE CONNECTED?"}
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "EXCELLENT."}
+{"context": "Scene: Obj Krisroom", "speaker": "Toriel", "text": "Kris...!"}
+{"context": "Scene: Obj Krisroom", "speaker": "Toriel", "text": "Wake up!"}
+{"context": "Scene: Obj Classscene", "speaker": "Alphys", "text": "So, does everyone have a..."}
+{"context": "Scene: Obj Classscene", "speaker": "Susie", "text": "... am I late?"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "YES"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "SWEETS"}
+```
+
+## HuggingFace dataset_info
+
+The schema is declared in the repository's `README.md` as HuggingFace dataset metadata:
+
+```yaml
+dataset_info:
+  features:
+  - name: context
+    dtype: string
+  - name: speaker
+    dtype: string
+  - name: text
+    dtype: string
+task_categories:
+- text-generation
+language:
+- en
+```
+
+## Format comparison
+
+All three available formats represent the same underlying data:
+
+| Format | Fields | Notes |
+|--------|--------|-------|
+| JSONL | `context`, `speaker`, `text` | One JSON object per line |
+| Parquet | `context`, `speaker`, `text` | Columnar, same column names |
+| ChatML | `messages[].role`, `messages[].content` | Reformatted for instruction tuning |
+
+## ChatML message structure
+
+The ChatML format wraps the same data in a multi-turn message structure:
+
+<ResponseField name="messages" type="array" required>
+  Array of message objects with `role` and `content`.
+
+  <Expandable title="message object">
+    <ResponseField name="role" type="string" required>
+      One of `"system"`, `"user"`, or `"assistant"`.
+    </ResponseField>
+    <ResponseField name="content" type="string" required>
+      The message text. The system message establishes the archive role; the user message requests a scene transcript; the assistant message provides the full scene dialogue.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the Deltarune Script Archive. You provide exact, chronological scene transcripts including dialogues, actions, and pauses."
+    },
+    {
+      "role": "user",
+      "content": "Provide the transcript for Scene: Obj Krisroom.\nContext: This scene occurs after 'Device Contact' and before 'Obj Carcutscene'."
+    },
+    {
+      "role": "assistant",
+      "content": "Toriel: \"Kris...!\"\nToriel: \"Wake up!\"\nToriel: \"KRIS...!\"\nToriel: \"Kris, if you do not wake up, we will be late for school!\"\nToriel: \"I will wait outside for you, alright?\""
+    }
+  ]
+}
+```
+
+<Note>
+  The ChatML format aggregates all individual JSONL records for a scene into a single assistant response. One ChatML record equals one full scene.
+</Note>

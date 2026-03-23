@@ -1,0 +1,70 @@
+---
+title: "Introduction"
+description: "A structured transcript dataset for Deltarune Chapters 1–4, designed to give language models accurate narrative context for underrepresented game content."
+---
+
+The Deltarune Complete Transcript Dataset is a fan-made, structured collection of dialogue, narration, and player choices from Deltarune Chapters 1 through 4. It was created to address a practical gap: large language models trained before or without sufficient coverage of Chapters 3 and 4 lack reliable knowledge of those chapters' characters, plot, and mechanics.
+
+This dataset provides a clean, machine-readable form of the game's full narrative so that LLMs can be fine-tuned, prompted, or evaluated against accurate Deltarune content.
+
+<Note>
+  This dataset is released under the **CC0 1.0 Universal** public domain dedication. You are free to use, modify, and redistribute it for any purpose without attribution.
+</Note>
+
+## Data sources
+
+Transcript data was sourced from video playthroughs of each chapter. Raw dialogue and narration were manually transcribed, then segmented into structured records with the assistance of Google Gemini for scene boundary detection and speaker attribution. Each record captures a single utterance or narration block alongside its scene context.
+
+## Record structure
+
+Every record in the dataset contains exactly three fields:
+
+| Field | Description |
+|---|---|
+| `context` | The scene or location where the line occurs (e.g., `"Scene: Cyber World"`) |
+| `speaker` | Who is speaking: a character name, `Narrator`, or `Player` |
+| `text` | The raw dialogue, narration text, or player choice option |
+
+```json
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "ARE YOU THERE?"}
+{"context": "Scene: Cyber World", "speaker": "Susie", "text": "Hell yeah!!!"}
+```
+
+### Speaker types
+
+- **Character names** (Kris, Susie, Ralsei, Toriel, etc.) — spoken dialogue
+- **`Narrator`** — game narration, item descriptions, and visual descriptions
+- **`Player`** — selectable choice options presented to the player
+
+## Available formats
+
+The dataset is distributed in three formats to support different use cases:
+
+- **JSONL** — one JSON object per line, one file per chapter (`data/chap1_dataset.jsonl` through `chap4_dataset.jsonl`)
+- **Parquet** — columnar format for efficient querying, one file per chapter plus a combined `full_chapters_dataset.parquet` (`parquet/` directory)
+- **ChatML** — pre-formatted for LLM fine-tuning (`data/chatml/deltarune_story_chatml.jsonl`)
+
+<Warning>
+  **Known gaps in the dataset:**
+
+  - Chapter 1 was not processed through video-to-text transcription; some scene coverage may differ from later chapters.
+  - Chapters 2 and 3 are missing some visual descriptions and environmental narration.
+  - The Snowgrave (genocide) route for Chapter 2 is not included in this dataset. Only the pacifist/neutral route is covered.
+</Warning>
+
+## Explore the dataset
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="bolt" href="/quickstart">
+    Load the dataset in Python and run your first queries in minutes.
+  </Card>
+  <Card title="Schema reference" icon="table" href="/data-model/schema">
+    Full documentation for the `context`, `speaker`, and `text` fields.
+  </Card>
+  <Card title="Dataset overview" icon="database" href="/dataset/overview">
+    Record counts, chapter breakdowns, speaker distributions, and coverage notes.
+  </Card>
+  <Card title="LLM fine-tuning" icon="brain" href="/usage/llm-finetuning">
+    Use the ChatML file to fine-tune a model on Deltarune narrative content.
+  </Card>
+</CardGroup>

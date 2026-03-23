@@ -1,0 +1,178 @@
+---
+title: "LLM fine-tuning"
+description: "Use the Deltarune transcript dataset to fine-tune a language model on Deltarune Ch3/Ch4 dialogue, using the included ChatML file and HuggingFace TRL."
+---
+
+Large language models trained on public internet data have limited or no knowledge of Deltarune Chapters 3 and 4, which were released after most training cutoffs. This dataset was created specifically to fill that gap, providing cleaned, scene-ordered transcripts suitable for supervised fine-tuning (SFT).
+
+<Info>
+  The dataset contains between 10,000 and 100,000 records in total across all chapters and formats.
+</Info>
+
+<Warning>
+  This is fan-compiled data. Transcript quality varies by chapter. Chapter 4 data is in **Beta status** and may contain errors or incomplete scenes.
+</Warning>
+
+## ChatML format
+
+The file `data/chatml/deltarune_story_chatml.jsonl` stores each scene as a three-turn conversation in the OpenAI ChatML (messages) format:
+
+| Role | Content |
+|---|---|
+| `system` | Establishes the assistant's role as a script archive |
+| `user` | Requests a scene transcript, including scene ordering context |
+| `assistant` | Returns the full scene transcript, one line per speaker turn |
+
+This structure makes the data directly compatible with `SFTTrainer`, `trl`, and any framework that accepts the messages format.
+
+### System prompt
+
+```
+You are the Deltarune Script Archive. You provide exact, chronological scene transcripts including dialogues, actions, and pauses.
+```
+
+### User prompt structure
+
+The user turn encodes both the target scene and its position in the narrative:
+
+```
+Provide the transcript for Scene: Obj Krisroom.
+Context: This scene occurs after 'Device Contact' and before 'Obj Carcutscene'.
+```
+
+Including the adjacent scenes teaches the model scene ordering — important for generating contextually coherent continuations.
+
+### Full example record
+
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are the Deltarune Script Archive. You provide exact, chronological scene transcripts including dialogues, actions, and pauses."
+    },
+    {
+      "role": "user",
+      "content": "Provide the transcript for Scene: Obj Krisroom.\nContext: This scene occurs after 'Device Contact' and before 'Obj Carcutscene'."
+    },
+    {
+      "role": "assistant",
+      "content": "Toriel: \"Kris...!\"\nToriel: \"Wake up!\"\nToriel: \"KRIS...!\"\nToriel: \"Kris, if you do not wake up, we will be late for school!\"\nToriel: \"I will wait outside for you, alright?\""
+    }
+  ]
+}
+```
+
+## Fine-tuning with TRL
+
+<Steps>
+  <Step title="Download the ChatML file">
+    Clone the repository to get the ChatML file locally.
+
+    ```bash
+    git clone https://github.com/ntvm/Deltarune-Complete-Transcript-Cleaned
+    cd Deltarune-Complete-Transcript-Cleaned
+    ```
+  </Step>
+
+  <Step title="Load into a HuggingFace Dataset">
+    Convert the JSONL file to a `datasets.Dataset` object.
+
+    ```python
+    from datasets import Dataset
+    import json
+
+    records = []
+    with open("data/chatml/deltarune_story_chatml.jsonl") as f:
+        for line in f:
+            records.append(json.loads(line))
+
+    dataset = Dataset.from_list(records)
+    # Each row has a single 'messages' column containing a list of dicts
+    print(dataset)
+    # Dataset({features: ['messages'], num_rows: ...})
+    ```
+
+    Optionally split into train and evaluation sets:
+
+    ```python
+    split = dataset.train_test_split(test_size=0.05, seed=42)
+    train_ds = split["train"]
+    eval_ds  = split["test"]
+    ```
+  </Step>
+
+  <Step title="Install training dependencies">
+    ```bash
+    pip install transformers trl peft accelerate bitsandbytes
+    ```
+  </Step>
+
+  <Step title="Configure and run SFTTrainer">
+    The `SFTTrainer` from TRL accepts the messages format directly when you provide a `formatting_func` or set `dataset_text_field`.
+
+    ```python
+    from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
+    from trl import SFTTrainer, SFTConfig
+
+    model_id = "mistralai/Mistral-7B-v0.1"  # replace with your base model
+
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer.pad_token = tokenizer.eos_token
+
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        load_in_4bit=True,       # requires bitsandbytes
+        device_map="auto",
+    )
+
+    training_args = SFTConfig(
+        output_dir="./deltarune-sft",
+        num_train_epochs=3,
+        per_device_train_batch_size=2,
+        gradient_accumulation_steps=8,
+        learning_rate=2e-4,
+        logging_steps=50,
+        save_strategy="epoch",
+        fp16=True,
+    )
+
+    trainer = SFTTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_ds,
+        eval_dataset=eval_ds,
+        tokenizer=tokenizer,
+    )
+
+    trainer.train()
+    trainer.save_model("./deltarune-sft-final")
+    ```
+
+    <Note>
+      `SFTTrainer` automatically applies the chat template when the dataset contains a `messages` column. Ensure the tokenizer has a chat template defined, or set one manually with `tokenizer.chat_template`.
+    </Note>
+  </Step>
+</Steps>
+
+## Using the JSONL data for RAG
+
+The per-chapter JSONL files (`data/chap1_dataset.jsonl` through `data/chap4_dataset.jsonl`) are well-suited for retrieval-augmented generation (RAG). Each record's three fields can be combined into an embedding-friendly string:
+
+```python
+import pandas as pd
+
+df = pd.read_json("data/chap1_dataset.jsonl", lines=True)
+
+# Combine fields into a single string for embedding
+df["embedding_text"] = (
+    df["context"] + " | "
+    + df["speaker"] + ": "
+    + df["text"]
+)
+
+print(df["embedding_text"].iloc[0])
+# Scene: Device Contact | Narrator: ARE YOU THERE?
+```
+
+Feed `embedding_text` values to any embedding model (e.g., `sentence-transformers`, OpenAI embeddings) and store the vectors in a vector database. At query time, retrieve the most relevant lines and inject them into the LLM prompt as context.

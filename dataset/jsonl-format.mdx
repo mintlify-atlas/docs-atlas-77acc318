@@ -1,0 +1,131 @@
+---
+title: "JSONL format"
+description: "How to read and work with the Deltarune dataset in JSONL (newline-delimited JSON) format."
+---
+
+JSONL (newline-delimited JSON) stores one JSON object per line. Each line is a self-contained, valid JSON record. This makes it easy to stream large files without loading everything into memory, and to process records incrementally in scripts and pipelines.
+
+The JSONL files for this dataset are located at `data/chap*_dataset.jsonl`, one file per chapter.
+
+## Record structure
+
+Each record has three fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `context` | string | The scene identifier, prefixed with `Scene:` |
+| `speaker` | string | The character delivering this line, or `Narrator` for non-dialogue text |
+| `text` | string | The exact line of dialogue or narration |
+
+## Example records
+
+```json
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "ARE YOU THERE?"}
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "ARE WE CONNECTED?"}
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "EXCELLENT."}
+{"context": "Scene: Obj Krisroom", "speaker": "Toriel", "text": "Kris...!"}
+{"context": "Scene: Obj Krisroom", "speaker": "Toriel", "text": "Wake up!"}
+{"context": "Scene: Obj Classscene", "speaker": "Alphys", "text": "So, does everyone have a..."}
+{"context": "Scene: Obj Classscene", "speaker": "Susie", "text": "... am I late?"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "YES"}
+```
+
+<Note>
+  Records within each file are in chronological order as they appear in the game. Do not assume ordering is preserved when combining multiple files unless you sort explicitly.
+</Note>
+
+## Loading the data
+
+<CodeGroup>
+
+```python pandas
+import pandas as pd
+
+# Load a single chapter
+df = pd.read_json("data/chap1_dataset.jsonl", lines=True)
+print(df.head())
+print(f"Total records: {len(df)}")
+```
+
+```python json stdlib
+import json
+
+records = []
+with open("data/chap1_dataset.jsonl", "r", encoding="utf-8") as f:
+    for line in f:
+        record = json.loads(line)
+        records.append(record)
+
+print(f"Loaded {len(records)} records")
+print(records[0])
+```
+
+```python streaming
+import json
+
+# Process one record at a time without loading the full file
+with open("data/chap1_dataset.jsonl", "r", encoding="utf-8") as f:
+    for line in f:
+        record = json.loads(line)
+        # Process each record here
+        print(record["speaker"], ":", record["text"])
+```
+
+</CodeGroup>
+
+## Filtering examples
+
+### Filter by chapter
+
+To work with a specific chapter, load only that chapter's file.
+
+```python
+import pandas as pd
+
+# Chapter 3 only
+df = pd.read_json("data/chap3_dataset.jsonl", lines=True)
+```
+
+### Filter by speaker
+
+```python
+import pandas as pd
+
+df = pd.read_json("data/chap1_dataset.jsonl", lines=True)
+
+# All lines spoken by Susie
+susie_lines = df[df["speaker"] == "Susie"]
+print(f"Susie has {len(susie_lines)} lines in Chapter 1")
+print(susie_lines[["context", "text"]].head(10))
+```
+
+### Filter by scene
+
+```python
+import pandas as pd
+
+df = pd.read_json("data/chap1_dataset.jsonl", lines=True)
+
+# All lines in the classroom scene
+classroom = df[df["context"] == "Scene: Obj Classscene"]
+for _, row in classroom.iterrows():
+    print(f"{row['speaker']}: {row['text']}")
+```
+
+### Combine all chapters
+
+```python
+import pandas as pd
+import glob
+
+files = sorted(glob.glob("data/chap*_dataset.jsonl"))
+dfs = [pd.read_json(f, lines=True) for f in files]
+df_all = pd.concat(dfs, ignore_index=True)
+
+print(f"Total records across all chapters: {len(df_all)}")
+print(df_all["speaker"].value_counts().head(10))
+```
+
+<Tip>
+  If you need cross-chapter analysis regularly, use the `parquet/full_chapters_dataset.parquet` file instead. It is pre-built from all JSONL files and loads faster for repeated queries.
+</Tip>

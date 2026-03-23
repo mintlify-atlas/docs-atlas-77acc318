@@ -1,0 +1,151 @@
+---
+title: "Filtering and querying"
+description: "Filter and aggregate the Deltarune transcript dataset by speaker, scene, or chapter using pandas, DuckDB, or Polars."
+---
+
+All transcript records share three fields: `context` (scene identifier), `speaker`, and `text`. The examples below use the combined Parquet file so queries span the full dataset, but the same syntax applies to any per-chapter file.
+
+```python
+import pandas as pd
+
+df = pd.read_parquet("parquet/full_chapters_dataset.parquet")
+```
+
+## Filter by speaker
+
+```python
+# All Susie lines
+susie = df[df["speaker"] == "Susie"]
+
+# All narration
+narrator = df[df["speaker"] == "Narrator"]
+
+# All player choices
+player = df[df["speaker"] == "Player"]
+```
+
+## Filter by scene
+
+The `context` field stores the full scene label, including the `"Scene: "` prefix.
+
+```python
+# All lines from a single scene
+classscene = df[df["context"] == "Scene: Obj Classscene"]
+
+# Partial match — all scenes whose name contains a substring
+school_scenes = df[df["context"].str.contains("School", case=False)]
+```
+
+## Filter by chapter
+
+Chapter-scoped analysis is easiest by loading the per-chapter file directly.
+
+```python
+import pandas as pd
+
+chap2 = pd.read_parquet("parquet/chap2_dataset.parquet")
+```
+
+To filter the combined file by chapter, add a chapter column after loading each file individually and then concatenate:
+
+```python
+import pandas as pd
+
+chapters = {}
+for i in range(1, 5):
+    path = f"parquet/chap{i}_dataset.parquet"
+    chapters[i] = pd.read_parquet(path).assign(chapter=i)
+
+df = pd.concat(chapters.values(), ignore_index=True)
+
+# Now filter by chapter number
+chap3_df = df[df["chapter"] == 3]
+```
+
+## Aggregations
+
+### Count lines per speaker
+
+```python
+lines_per_speaker = (
+    df.groupby("speaker")["text"]
+    .count()
+    .sort_values(ascending=False)
+    .rename("line_count")
+)
+print(lines_per_speaker.head(10))
+```
+
+### List all unique scenes
+
+```python
+scenes = df["context"].unique()
+print(f"{len(scenes)} unique scenes")
+for scene in sorted(scenes):
+    print(scene)
+```
+
+### List all speakers in a chapter
+
+```python
+chap1 = pd.read_parquet("parquet/chap1_dataset.parquet")
+print(chap1["speaker"].unique())
+```
+
+### Count scenes per chapter
+
+```python
+scenes_per_chapter = (
+    df.groupby("chapter")["context"]
+    .nunique()
+    .rename("unique_scenes")
+)
+print(scenes_per_chapter)
+```
+
+## SQL-style alternatives
+
+<CodeGroup>
+
+```python DuckDB
+import duckdb
+
+# Register the Parquet file directly — no pandas load needed
+con = duckdb.connect()
+
+susie_lines = con.execute("""
+    SELECT context, text
+    FROM 'parquet/full_chapters_dataset.parquet'
+    WHERE speaker = 'Susie'
+    ORDER BY rowid
+""").df()
+
+lines_per_speaker = con.execute("""
+    SELECT speaker, COUNT(*) AS line_count
+    FROM 'parquet/full_chapters_dataset.parquet'
+    GROUP BY speaker
+    ORDER BY line_count DESC
+""").df()
+```
+
+```python Polars
+import polars as pl
+
+df = pl.read_parquet("parquet/full_chapters_dataset.parquet")
+
+# Filter Susie lines
+susie = df.filter(pl.col("speaker") == "Susie")
+
+# Lines per speaker
+lines_per_speaker = (
+    df.group_by("speaker")
+    .agg(pl.len().alias("line_count"))
+    .sort("line_count", descending=True)
+)
+```
+
+</CodeGroup>
+
+<Tip>
+  DuckDB can query Parquet files on disk without loading them into memory first, which is useful when working with large combined files.
+</Tip>

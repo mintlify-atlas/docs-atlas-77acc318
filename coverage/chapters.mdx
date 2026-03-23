@@ -1,0 +1,45 @@
+---
+title: "Chapter coverage"
+description: "Overview of which Deltarune chapters are included in the dataset, their file names, route coverage, and stability status."
+---
+
+The dataset covers all four released chapters of Deltarune. Each chapter is distributed as a separate pair of files (`.txt` and `.jsonl`) to allow selective loading.
+
+<Info>
+  The dataset spans **10K–100K records** total across all four chapters. Each chapter is a self-contained file — you can load individual chapters without pulling in the entire dataset.
+</Info>
+
+## Summary table
+
+| File | Chapter | Route coverage | Status |
+|------|---------|---------------|--------|
+| `chap1_cleaned.txt` / `.jsonl` | Chapter 1 | Full (no alternate routes) | Stable |
+| `chap2_cleaned.txt` / `.jsonl` | Chapter 2 | Normal Route only | Stable |
+| `chap3_cleaned.txt` / `.jsonl` | Chapter 3 | Normal Route + Sword Route | Stable |
+| `chap4_cleaned.txt` / `.jsonl` | Chapter 4 | Normal Route only | Beta |
+
+## Chapter 1
+
+Chapter 1 is fully transcribed and stable. This chapter has no alternate routes in the game, so there are no branching paths to account for.
+
+**Limitation:** Chapter 1 was processed before the vid2text pipeline was in place. This means it lacks visual/stage direction descriptions that later chapters include for key scenes. No updates to address this are planned — use it as-is or exclude it if visual description consistency matters for your use case.
+
+## Chapter 2
+
+Chapter 2 is fully transcribed for the **Normal Route** and is stable.
+
+**Limitation:** Approximately 15 key scenes are missing visual/stage direction descriptions, which will be added in a future update. The Snowgrave/Weird Route — an alternate path with significant content differences — is not included. See [Known gaps](/coverage/known-gaps) for details.
+
+## Chapter 3
+
+Chapter 3 is fully transcribed and stable. This is the only chapter with alternate route content included: both the **Normal Route** and the **Sword Route** are transcribed.
+
+**Limitation:** Approximately 15 key scenes are missing visual/stage direction descriptions, to be addressed in a future update.
+
+## Chapter 4
+
+Chapter 4 is fully transcribed for the **Normal Route** and is currently in **Beta** status.
+
+<Warning>
+  Chapter 4 may have quality issues compared to the stable chapters. The Snowgrave Route differences for Chapter 4 are not transcribed. Beta status means the transcription has not undergone the same level of quality control as Chapters 1–3.
+</Warning>

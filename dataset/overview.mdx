@@ -1,0 +1,80 @@
+---
+title: "Dataset overview"
+description: "An overview of the Deltarune Complete Transcript Dataset: file structure, coverage, formats, and when to use each."
+---
+
+The Deltarune Complete Transcript Dataset is a structured collection of dialogue and narration extracted from Deltarune Chapters 1–4. It covers all major scenes and characters and is provided in three machine-readable formats suitable for data analysis, search, and language model fine-tuning.
+
+The dataset contains between 10,000 and 100,000 records across all chapters.
+
+## File coverage
+
+| File | Coverage | Status |
+|------|----------|---------|
+| `data/chap1_cleaned.txt` / `chap1_dataset.jsonl` | Chapter 1 (full) | Stable |
+| `data/chap2_cleaned.txt` / `chap2_dataset.jsonl` | Chapter 2 (full, Normal Route) | Stable |
+| `data/chap3_cleaned.txt` / `chap3_dataset.jsonl` | Chapter 3 (full, includes Sword Route) | Stable |
+| `data/chap4_cleaned.txt` / `chap4_dataset.jsonl` | Chapter 4 (full, Normal Route) | Beta |
+
+<Note>
+  Chapter 4 data is currently in Beta. Record counts and scene ordering may change in future releases.
+</Note>
+
+## Available formats
+
+The dataset is distributed in three formats. Each serves a different use case.
+
+| Format | Location | Best for |
+|--------|----------|-----------|
+| JSONL | `data/chap*_dataset.jsonl` | Streaming, scripting, custom pipelines |
+| Parquet | `parquet/chap*_dataset.parquet`, `parquet/full_chapters_dataset.parquet` | Analytical queries, columnar access, large-scale filtering |
+| ChatML | `data/chatml/deltarune_story_chatml.jsonl` | Instruction fine-tuning of language models |
+
+<CardGroup cols={3}>
+  <Card title="JSONL format" icon="file-lines" href="/dataset/jsonl-format">
+    Newline-delimited JSON records. One dialogue line per record with context, speaker, and text fields.
+  </Card>
+  <Card title="Parquet format" icon="database" href="/dataset/parquet-format">
+    Columnar binary format for fast filtering and aggregation. Includes a combined file covering all chapters.
+  </Card>
+  <Card title="ChatML format" icon="message-bot" href="/dataset/chatml-format">
+    Instruction-tuning format with system, user, and assistant roles. Use for fine-tuning language models.
+  </Card>
+</CardGroup>
+
+## Repository structure
+
+```
+data/
+  chap1_cleaned.txt         # Cleaned text, Chapter 1
+  chap1_dataset.jsonl       # Structured JSONL, Chapter 1
+  chap2_cleaned.txt
+  chap2_dataset.jsonl
+  chap3_cleaned.txt
+  chap3_dataset.jsonl
+  chap4_cleaned.txt
+  chap4_dataset.jsonl
+  chatml/
+    deltarune_story_chatml.jsonl  # ChatML format, all chapters
+
+parquet/
+  chap1_dataset.parquet
+  chap2_dataset.parquet
+  chap3_dataset.parquet
+  chap4_dataset.parquet
+  full_chapters_dataset.parquet  # All chapters combined
+
+raw/
+  chap1.txt   # Raw pre-processed transcript
+  chap2.txt
+  chap3.txt
+  chap4.txt
+
+parquet.py    # Script to regenerate parquets from JSONL
+```
+
+## The `raw/` directory
+
+The `raw/` directory contains the original pre-processed transcript text files (`chap1.txt` through `chap4.txt`). These are unstructured plain text files and are **not** suitable for direct programmatic use. They represent the source material before scene segmentation, speaker attribution, and field extraction were applied.
+
+Use the `data/chap*_cleaned.txt` files if you need a human-readable cleaned version, or any of the structured formats above for programmatic access.

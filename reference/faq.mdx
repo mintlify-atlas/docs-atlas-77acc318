@@ -1,0 +1,56 @@
+---
+title: "FAQ"
+description: "Frequently asked questions about the Deltarune Complete Transcript Dataset."
+---
+
+<AccordionGroup>
+  <Accordion title="Why does this dataset exist?">
+    As of early 2026, major LLMs — including models with training cutoffs after the July 2025 public release of Deltarune Chapters 3 and 4 — consistently fail to recall basic plot details from those chapters. This dataset exists to fill that gap by providing a structured, machine-readable transcript of all four released chapters.
+  </Accordion>
+
+  <Accordion title="How was the data collected?">
+    The dataset was processed from video playthroughs of Deltarune. The workflow combined manual transcription with AI-assisted segmentation using Google Gemini. All transcription, formatting, quality control, and cross-referencing was performed by one person.
+  </Accordion>
+
+  <Accordion title="Was this extracted from game files?">
+    No. This dataset was not extracted from Deltarune's game files. All content was processed from video playthroughs only. This means the data reflects what appears during actual gameplay rather than raw asset dumps.
+  </Accordion>
+
+  <Accordion title="Who created this?">
+    This is a solo project. One person performed all transcription, formatting, quality control, and cross-referencing. There is no team behind it.
+  </Accordion>
+
+  <Accordion title="Is this dataset complete?">
+    Chapters 1, 2, and 3 are stable. Chapter 4 is currently in **Beta** status and may have quality issues. There are also known gaps across chapters — see [Known gaps](/coverage/known-gaps) for the full list.
+  </Accordion>
+
+  <Accordion title="Does this include the Snowgrave/Weird Route?">
+    No. The Snowgrave/Weird Route is not included for any chapter. Chapter 2 and Chapter 4 cover the Normal Route only. Chapter 3 includes both the Normal Route and the Sword Route, but has no Snowgrave content. See [Route coverage](/coverage/routes) for the full breakdown.
+  </Accordion>
+
+  <Accordion title="Can I use this commercially?">
+    Yes. The dataset is released under CC0 1.0 — Public Domain. There are no restrictions on use, including commercial use. No attribution is required. See [License](/reference/license) for details.
+  </Accordion>
+
+  <Accordion title="What formats are available?">
+    The dataset is available in the following formats:
+
+    - **JSONL** — Structured JSON Lines format (one record per line), available as `chap{N}_cleaned.jsonl` files
+    - **Plain text** — Available as `chap{N}_cleaned.txt` files
+    - **Parquet** — Structured columnar format available on HuggingFace
+    - **ChatML** — Conversational format for use with chat-style model training
+  </Accordion>
+
+  <Accordion title="How do I report issues or contribute?">
+    Issues and contributions can be reported at the project's GitHub repository:
+
+    [https://github.com/ntvm/Deltarune-Complete-Transcript-Cleaned](https://github.com/ntvm/Deltarune-Complete-Transcript-Cleaned)
+  </Accordion>
+
+  <Accordion title="What's the difference between raw/ and data/ files?">
+    - **`raw/`** — Contains pre-processed source files before structured formatting was applied.
+    - **`data/`** — Contains the cleaned, structured JSONL files suitable for direct use in training pipelines or retrieval systems.
+
+    In most cases, you should use the files in `data/` unless you need the unprocessed source material for a specific reason.
+  </Accordion>
+</AccordionGroup>

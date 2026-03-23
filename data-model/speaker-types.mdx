@@ -1,0 +1,102 @@
+---
+title: "Speaker types"
+description: "Reference for all speaker tags used in the dataset and what they represent."
+---
+
+Every record in the dataset has a `speaker` field that identifies who is delivering the line. There are three categories of speaker tags.
+
+## Speaker categories
+
+| Tag | Category | Usage |
+|-----|----------|-------|
+| Character names (e.g., `Susie`, `Toriel`) | Named character | Spoken dialogue |
+| `Narrator` | Narrator | Game text, item descriptions, visual-to-text descriptions, stage directions |
+| `Player` | Player choice | Menu choice options presented to the player |
+
+## Character names
+
+Character name tags correspond directly to in-game display names. Common characters across the dataset include:
+
+| Character | Appears in |
+|-----------|-----------|
+| Kris | All chapters (protagonist, usually silent — choices appear as `Player`) |
+| Susie | Chapters 1–4 |
+| Ralsei | Chapters 1–4 |
+| Toriel | Chapters 1–4 |
+| Alphys | Chapters 1–4 |
+| Noelle | Chapters 1–4 |
+| Berdly | Chapters 1–3 |
+| Lancer | Chapters 1–2 |
+| Rouxls Kaard | Chapters 1–2 |
+
+Example character dialogue:
+```json
+{"context": "Scene: Obj Krisroom", "speaker": "Toriel", "text": "Kris...!"}
+{"context": "Scene: Obj Krisroom", "speaker": "Toriel", "text": "Wake up!"}
+{"context": "Scene: Obj Classscene", "speaker": "Susie", "text": "... am I late?"}
+{"context": "Scene: Obj Schoollobbycutscene", "speaker": "Susie", "text": "Quiet people piss me off."}
+{"context": "Scene: Obj Classscene", "speaker": "Alphys", "text": "So, does everyone have a..."}
+```
+
+<Note>
+  Character names match the in-game display names exactly as they appear in the game. Capitalisation follows game conventions (e.g., `RALSEI` may appear in all-caps in certain scenes).
+</Note>
+
+## Narrator
+
+The `Narrator` tag is used for all non-character text including:
+
+- **Game text** — Flavour text, environmental descriptions
+- **Item descriptions** — Text shown when examining objects
+- **Visual-to-text (vid2text)** — Descriptions of on-screen actions, animations, and stage directions converted from video
+- **System messages** — In-game prompts and interface text
+
+```json
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "ARE YOU THERE?"}
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "ARE WE CONNECTED?"}
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "EXCELLENT."}
+{"context": "Scene: Device Contact", "speaker": "Narrator", "text": "YOU MUST CREATE A VESSEL."}
+```
+
+<Info>
+  Chapter 1 was transcribed before the vid2text pass was applied. Visual/stage direction descriptions are absent from Chapter 1 Narrator lines. Chapters 2 and 3 still have approximately 15 key scenes each where visual descriptions are pending. See [Known gaps](/coverage/known-gaps) for details.
+</Info>
+
+## Player
+
+The `Player` tag marks player-facing choice options — the selectable menu items shown during dialogue branches and the character creation sequence.
+
+```json
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "YES"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "SWEETS"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "B"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "GREEN"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "VOICE"}
+{"context": "Scene: Device Contact", "speaker": "Player", "text": "HOPE"}
+```
+
+<Note>
+  `Player` lines represent all available options as they appear in the game — including options not selected in the specific playthrough. The transcription captures the full choice set, not just the selected option.
+</Note>
+
+## Filtering by speaker
+
+To work with a specific speaker type in Python:
+
+```python
+import pandas as pd
+
+df = pd.read_json('data/chap2_dataset.jsonl', lines=True)
+
+# All Susie lines
+susie = df[df['speaker'] == 'Susie']
+
+# All narration
+narration = df[df['speaker'] == 'Narrator']
+
+# All player choices
+choices = df[df['speaker'] == 'Player']
+
+# Count lines per speaker
+print(df['speaker'].value_counts())
+```

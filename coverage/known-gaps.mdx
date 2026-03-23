@@ -1,0 +1,52 @@
+---
+title: "Known gaps"
+description: "Documented limitations and missing content in the Deltarune Complete Transcript Dataset."
+---
+
+<Warning>
+  This dataset has documented limitations. Review the gaps below before deciding how to use or filter the data for your application.
+</Warning>
+
+The following gaps are known and intentionally documented. Some may be addressed in future updates; others are by design.
+
+<AccordionGroup>
+  <Accordion title="Chapter 1: No visual descriptions (pre-vid2text)">
+    Chapter 1 was transcribed before the vid2text pipeline was introduced. As a result, it does not include visual/stage direction descriptions for any scenes — a feature that was added starting with Chapter 2.
+
+    **Status:** No updates planned. This chapter will not be retroactively processed.
+
+    **Recommendation:** Use Chapter 1 as-is if visual descriptions are not important for your use case. If you need consistent visual description coverage across all chapters, exclude Chapter 1 from your dataset.
+  </Accordion>
+
+  <Accordion title="Chapters 2–3: ~15 scenes missing visual descriptions">
+    For Chapters 2 and 3, approximately 15 key scenes per chapter are still missing visual/stage direction descriptions. These are scenes where the transcription captures dialogue and action but omits descriptive context about what is shown on screen.
+
+    **Status:** Pending. These descriptions will be added in a future update.
+
+    **Scope:** Roughly 15 scenes per chapter — a small fraction of the total content, but potentially significant for scenes that rely heavily on visual storytelling.
+  </Accordion>
+
+  <Accordion title="Chapter 2 and Chapter 4: Snowgrave/Weird Route not included">
+    The Snowgrave Route (also called the Weird Route) is an alternate playthrough path available in Chapters 2 and 4. It involves significantly different choices, scenes, and outcomes compared to the Normal Route.
+
+    **Status:** Not transcribed. There is no Snowgrave/Weird Route content anywhere in this dataset.
+
+    **Affected chapters:**
+    - Chapter 2: Snowgrave Route scenes and dialogue differences are not transcribed
+    - Chapter 4: Snowgrave Route differences are not transcribed
+
+    If your use case depends on complete route coverage for these chapters, this is a significant gap to be aware of.
+  </Accordion>
+
+  <Accordion title="Chapter 4: Beta quality">
+    Chapter 4 has not undergone the same level of quality control as Chapters 1–3. It is marked Beta and may contain transcription errors, formatting inconsistencies, or missed content.
+
+    **Status:** Beta. Quality improvements are ongoing.
+
+    **Recommendation:** If using Chapter 4, treat it as less reliable than the stable chapters. Consider additional validation or filtering for quality-sensitive applications.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  For training purposes, consider excluding Chapter 1 if visual description consistency matters. Chapters 2 and 3 have the most complete and uniform coverage, making them the best starting point for model training tasks that require consistent formatting.
+</Tip>

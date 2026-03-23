@@ -1,0 +1,45 @@
+---
+title: "Route coverage"
+description: "Per-chapter breakdown of which Deltarune branching routes are included in the dataset."
+---
+
+Deltarune features branching routes that lead to significantly different scenes, dialogue, and outcomes. Understanding which routes are covered is important for knowing what content the dataset actually includes.
+
+## Deltarune's route structure
+
+Deltarune has three main route types across its released chapters:
+
+- **Normal Route** — The standard playthrough path, available in all chapters.
+- **Snowgrave Route / Weird Route** — An alternate dark path available in Chapters 2 and 4, involving different choices and substantially different content.
+- **Sword Route** — An alternate path in Chapter 3 with different scenes and outcomes.
+
+## Per-chapter route coverage
+
+| Chapter | Normal Route | Snowgrave/Weird Route | Sword Route |
+|---------|--------------|-----------------------|-------------|
+| Chapter 1 | Included | N/A (no alternate routes) | N/A |
+| Chapter 2 | Included | **Not included** | N/A |
+| Chapter 3 | Included | N/A | Included |
+| Chapter 4 | Included | **Not included** | N/A |
+
+## Chapter 3 Sword Route
+
+Chapter 3 is the only chapter in this dataset with alternate route content included. The Sword Route — which involves different story beats and scenes compared to the Normal Route — is fully transcribed alongside the Normal Route content.
+
+This makes Chapter 3 the most complete chapter in the dataset from a route coverage perspective.
+
+## Missing: Snowgrave/Weird Route
+
+<Warning>
+  The Snowgrave Route (Chapters 2 and 4) is entirely absent from this dataset. No Snowgrave/Weird Route dialogue, scenes, or content of any kind is included.
+</Warning>
+
+The Snowgrave Route represents a distinct and substantial alternate playthrough. If you are training a model or building a system that needs to handle Snowgrave Route content — such as understanding specific character behavior, alternate dialogue, or route-specific plot points — this dataset will not cover those cases.
+
+## Implications for model training
+
+If you are using this dataset for model training or retrieval, keep the following in mind:
+
+- **Normal Route only users:** Chapters 1–4 Normal Route content is fully covered (with Chapter 4 at Beta quality).
+- **Completionist/all-routes users:** Chapter 3 Sword Route is included, but Snowgrave Route content for Chapters 2 and 4 is missing. A model trained on this dataset will not be able to reliably answer questions about Snowgrave Route events.
+- **Chapter-specific filtering:** Because each chapter is a separate file, you can load only the chapters whose coverage meets your requirements.
