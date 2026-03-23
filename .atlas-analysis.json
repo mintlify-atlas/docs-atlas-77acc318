@@ -1,0 +1,58 @@
+{
+  "projectType": "data-platform",
+  "projectName": "Deltarune Complete Transcript Dataset",
+  "projectDescription": "A structured, fan-made transcript dataset covering Deltarune Chapters 1–4, formatted for LLM fine-tuning and narrative context retrieval.",
+  "theme": "almond",
+  "primaryColor": "#7c7c7c",
+  "lightColor": "#080808",
+  "darkColor": "#c9c9c9",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Data Model",
+            "pages": ["data-model/schema", "data-model/speaker-types", "data-model/scene-context"]
+          },
+          {
+            "group": "Dataset Files",
+            "pages": ["dataset/overview", "dataset/jsonl-format", "dataset/parquet-format", "dataset/chatml-format"]
+          },
+          {
+            "group": "Usage Guide",
+            "pages": ["usage/loading-data", "usage/filtering", "usage/llm-finetuning"]
+          },
+          {
+            "group": "Coverage & Gaps",
+            "pages": ["coverage/chapters", "coverage/known-gaps", "coverage/routes"]
+          },
+          {
+            "group": "Reference",
+            "pages": ["reference/license", "reference/faq"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Full transcripts for Deltarune Chapters 1–4 (Normal Route)",
+    "Structured JSONL format with context, speaker, and text fields",
+    "Apache Parquet versions for efficient columnar querying",
+    "ChatML-formatted variant for LLM fine-tuning",
+    "Includes Sword Route content for Chapter 3",
+    "CC0 Public Domain license — no restrictions",
+    "Python script for regenerating Parquet files from JSONL sources"
+  ],
+  "publicApiSurface": [
+    "JSONL fields: context, speaker, text",
+    "Parquet files: chap1_dataset.parquet, chap2_dataset.parquet, chap3_dataset.parquet, chap4_dataset.parquet, full_chapters_dataset.parquet",
+    "ChatML file: data/chatml/deltarune_story_chatml.jsonl",
+    "parquet.py: make_parquets() — converts JSONL to Parquet",
+    "Speaker tags: Character names, Narrator, Player"
+  ]
+}
